@@ -114,150 +114,220 @@ class DataProcessor:
         """Process capacity data"""
         try:
             capacity_records = []
-            
+
             for sheet_name, df in capacity_data.items():
                 logger.info(f"Processing capacity sheet: {sheet_name}")
-                
+
+                df = df.dropna(how="all")
+                df.columns = [str(col).strip().lower().replace(" ", "_") for col in df.columns]
+
                 for i, row in df.iterrows():
-                    record = {'sheet': sheet_name, 'index': i}
+                    base = {
+                        "sheet": sheet_name,
+                        "index": i,
+                    }
+
+                    # Guess ID column
+                    id_col = next((col for col in df.columns if 'id' in col or 'name' in col), None)
+                    if id_col:
+                        base["warehouse_id"] = str(row[id_col])
                     
-                    # Add all columns as attributes
                     for col in df.columns:
-                        key = str(col).lower()
-                        record[key] = row[col]
-                    
-                    capacity_records.append(record)
-            
+                        if col in ("index", id_col):
+                            continue
+                        try:
+                            value = float(row[col])
+                            record = base.copy()
+                            record["capacity_type"] = col
+                            record["value"] = value
+                            capacity_records.append(record)
+                        except (ValueError, TypeError):
+                            continue
+
             logger.info(f"Processed {len(capacity_records)} capacity records")
             return capacity_records
-            
+
         except Exception as e:
             logger.error(f"Error processing capacity data: {str(e)}")
             return []
+
     
     def _process_demand_data(self, demand_data: Dict[str, pd.DataFrame]) -> List[Dict[str, Any]]:
         """Process demand data"""
         try:
             demand_records = []
-            
+
             for sheet_name, df in demand_data.items():
                 logger.info(f"Processing demand sheet: {sheet_name}")
-                
-                for i, row in df.iterrows():
-                    record = {'sheet': sheet_name, 'index': i}
-                    
-                    # Add all columns as attributes
-                    for col in df.columns:
-                        key = str(col).lower()
-                        record[key] = row[col]
-                    
-                    demand_records.append(record)
-            
-            logger.info(f"Processed {len(demand_records)} demand records")
-            print("DEBUG demand_df columns:", df.columns.tolist())
-            print("DEBUG demand_df head:")
-            print(df.head())
+
+                # Promote second row to header if first is junk
+                if df.shape[0] > 1 and any(str(c).startswith("Unnamed") or str(c).lower() in ["nan", "none"] for c in df.columns):
+                    df.columns = df.iloc[0]
+                    df = df.drop(df.index[0]).reset_index(drop=True)
+
+                # Drop fully empty or non-numeric columns
+                df = df.dropna(how="all", axis=1)
+                df.columns = [str(col).strip().lower().replace(" ", "_") for col in df.columns]
+
+                # Assume first column is product_type, rest are store IDs
+                product_col = df.columns[0]
+                store_columns = [c for c in df.columns[1:] if c.isnumeric()]
+
+                for _, row in df.iterrows():
+                    product_type = str(row[product_col]).strip().lower()
+                    if not product_type or "sum" in product_type or "average" in product_type:
+                        continue
+
+                    for store_id in store_columns:
+                        try:
+                            value = float(row[store_id])
+                            demand_records.append({
+                                "region": sheet_name,
+                                "product_type": product_type,
+                                "store_id": str(store_id),
+                                "value": value
+                            })
+                        except (ValueError, TypeError):
+                            continue
+
+                logger.info(f"Processed {len(demand_records)} demand records from sheet: {sheet_name}")
 
             return demand_records
-            
+
         except Exception as e:
             logger.error(f"Error processing demand data: {str(e)}")
             return []
-    
-    def _process_distance_data(self, distance_data: Dict[str, pd.DataFrame]) -> List[List[float]]:
-        """Process distance matrix data"""
+
+
+        
+    def _process_distance_data(self, distance_data: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
+        """
+        Process multiple distance matrices (regional), store them with names.
+        """
         try:
-            distance_matrix = []
-            
+            partial_matrices = {}
+
             for sheet_name, df in distance_data.items():
                 logger.info(f"Processing distance sheet: {sheet_name}")
-                
-                # Try to extract matrix from dataframe
-                numeric_df = df.select_dtypes(include=[np.number])
-                
-                if len(numeric_df.columns) > 0:
+
+                df_clean = df.copy()
+
+                # Try to drop columns with Unnamed/nan headers
+                df_clean.columns = [str(c) for c in df_clean.columns]
+                df_clean = df_clean.loc[:, ~df_clean.columns.str.lower().str.contains("unnamed|nan")]
+                df_clean = df_clean.dropna(how="all")
+
+                numeric_df = df_clean.select_dtypes(include=[np.number])
+
+                if not numeric_df.empty and numeric_df.shape[0] > 1:
                     matrix = numeric_df.values.tolist()
-                    if matrix:
-                        distance_matrix = matrix
-                        break
-            
-            logger.info(f"Processed distance matrix: {len(distance_matrix)}x{len(distance_matrix[0]) if distance_matrix else 0}")
-            return distance_matrix
-            
+                    partial_matrices[sheet_name] = {
+                        "rows": numeric_df.shape[0],
+                        "cols": numeric_df.shape[1],
+                        "matrix": matrix
+                    }
+                    logger.info(f"Processed partial matrix {sheet_name}: {numeric_df.shape[0]}×{numeric_df.shape[1]}")
+                else:
+                    logger.warning(f"Sheet {sheet_name} does not contain a usable numeric matrix")
+
+            return {"type": "partial", "matrices": partial_matrices}
+
         except Exception as e:
             logger.error(f"Error processing distance data: {str(e)}")
-            return []
-    
-    def _process_time_data(self, time_data: Dict[str, pd.DataFrame]) -> List[List[float]]:
-        """Process time matrix data"""
+            return {"type": "partial", "matrices": {}}
+
+
+    def _process_time_data(self, time_data: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
+        """
+        Process multiple time matrices (regional), store them with names.
+        """
         try:
-            time_matrix = []
-            
+            partial_matrices = {}
+
             for sheet_name, df in time_data.items():
                 logger.info(f"Processing time sheet: {sheet_name}")
-                
-                # Try to extract matrix from dataframe
-                numeric_df = df.select_dtypes(include=[np.number])
-                
-                if len(numeric_df.columns) > 0:
+
+                df_clean = df.copy()
+                df_clean.columns = [str(c) for c in df_clean.columns]
+                df_clean = df_clean.loc[:, ~df_clean.columns.str.lower().str.contains("unnamed|nan")]
+                df_clean = df_clean.dropna(how="all")
+
+                numeric_df = df_clean.select_dtypes(include=[np.number])
+
+                if not numeric_df.empty and numeric_df.shape[0] > 1:
                     matrix = numeric_df.values.tolist()
-                    if matrix:
-                        time_matrix = matrix
-                        break
-            
-            logger.info(f"Processed time matrix: {len(time_matrix)}x{len(time_matrix[0]) if time_matrix else 0}")
-            return time_matrix
-            
+                    partial_matrices[sheet_name] = {
+                        "rows": numeric_df.shape[0],
+                        "cols": numeric_df.shape[1],
+                        "matrix": matrix
+                    }
+                    logger.info(f"Processed partial time matrix {sheet_name}: {numeric_df.shape[0]}×{numeric_df.shape[1]}")
+                else:
+                    logger.warning(f"Sheet {sheet_name} does not contain a usable numeric matrix")
+
+            return {"type": "partial", "matrices": partial_matrices}
+
         except Exception as e:
             logger.error(f"Error processing time data: {str(e)}")
-            return []
+            return {"type": "partial", "matrices": {}}
+
+
     
     def _process_cost_data(self, cost_data: Dict[str, pd.DataFrame]) -> List[Dict[str, Any]]:
-        """Process cost data"""
+        """Process standard warehouse-store cost sheets"""
         try:
             cost_records = []
-            
+
             for sheet_name, df in cost_data.items():
                 logger.info(f"Processing cost sheet: {sheet_name}")
-                
-                for i, row in df.iterrows():
-                    record = {'sheet': sheet_name, 'index': i}
-                    
-                    # Add all columns as attributes
-                    for col in df.columns:
-                        key = str(col).lower()
-                        record[key] = row[col]
-                    
-                    cost_records.append(record)
-            
+                df_clean = df.dropna(how="all").dropna(axis=1, how="all")
+
+                # Try melting if matrix form
+                if df_clean.select_dtypes(include=[np.number]).shape[1] > 1:
+                    df_melted = df_clean.melt(ignore_index=False).reset_index()
+                    df_melted.columns = ['warehouse_id', 'store_id', 'cost']
+                    df_melted['sheet'] = sheet_name
+                    cost_records.extend(df_melted.to_dict(orient="records"))
+                else:
+                    # Long-form already
+                    for i, row in df_clean.iterrows():
+                        record = {"sheet": sheet_name, "index": i}
+                        for col in df_clean.columns:
+                            record[str(col).lower()] = row[col]
+                        cost_records.append(record)
+
             logger.info(f"Processed {len(cost_records)} cost records")
             return cost_records
-            
+
         except Exception as e:
             logger.error(f"Error processing cost data: {str(e)}")
             return []
     
     def _process_costs_mwc_data(self, costs_mwc_data: Dict[str, pd.DataFrame]) -> List[Dict[str, Any]]:
-        """Process MWC costs data"""
+        """Process MWC-specific cost sheets"""
         try:
             mwc_records = []
-            
+
             for sheet_name, df in costs_mwc_data.items():
                 logger.info(f"Processing MWC costs sheet: {sheet_name}")
-                
-                for i, row in df.iterrows():
-                    record = {'sheet': sheet_name, 'index': i}
-                    
-                    # Add all columns as attributes
-                    for col in df.columns:
-                        key = str(col).lower()
-                        record[key] = row[col]
-                    
-                    mwc_records.append(record)
-            
+                df_clean = df.dropna(how="all").dropna(axis=1, how="all")
+
+                # Melt if matrix-style
+                if df_clean.select_dtypes(include=[np.number]).shape[1] > 1:
+                    df_melted = df_clean.melt(ignore_index=False).reset_index()
+                    df_melted.columns = ['warehouse_id', 'store_id', 'cost']
+                    df_melted['sheet'] = sheet_name
+                    mwc_records.extend(df_melted.to_dict(orient="records"))
+                else:
+                    for i, row in df_clean.iterrows():
+                        record = {"sheet": sheet_name, "index": i}
+                        for col in df_clean.columns:
+                            record[str(col).lower()] = row[col]
+                        mwc_records.append(record)
+
             logger.info(f"Processed {len(mwc_records)} MWC cost records")
             return mwc_records
-            
+
         except Exception as e:
             logger.error(f"Error processing MWC costs data: {str(e)}")
             return []

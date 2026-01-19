@@ -144,7 +144,8 @@ export default function FileUpload({ onDataUpload, loading, setLoading }: FileUp
       {uploadedFiles.length > 0 && (
         <div className="mt-6">
           <h3 className="text-lg font-bold mb-3" style={{ color: '#2C3E50' }}>
-            Selected Files ({uploadedFiles.length})
+            Selecte
+              Files ({uploadedFiles.length})
           </h3>
           <div className="space-y-2">
             {uploadedFiles.map((file, index) => (
