@@ -1,10 +1,21 @@
 /**
- * Supply Chain Optimization Dashboard
+ * Intelligent Warehouse to Store Supply Chain Optimiser
  * Author: Manoj
  * License: MIT
+ * ─────────────────────────────────────────────────────────────
+ * @author   Manoj (manoj-10705)
+ * @email    ganymede323@gmail.com
+ * @github   https://github.com/manoj10705/miniproject
+ * @created  December 2025
+ * @license  MIT — Copyright (c) 2025-2026 Manoj
+ *
+ * React 19 + TypeScript + Vite frontend for the Intelligent
+ * Warehouse-to-Store Distribution Network Optimiser with
+ * Disruption Rerouting.
+ * ─────────────────────────────────────────────────────────────
  */
 
-import React, { useState, useCallback, useEffect} from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import FileUpload from './components/FileUpload';
 import Dashboard from './components/Dashboard';
@@ -86,7 +97,7 @@ export default function App() {
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold" style={{ color: '#2C3E50' }}>
-                Intelligent Warehouse to Store Distribution Network Optimiser with Disruption Rerouting
+                Intelligent Warehouse to Store Supply Chain Optimiser
               </h1>
               <p className="text-base mt-1" style={{ color: '#2C3E50' }}>
                 Advanced Analytics for Warehouse Allocation & Vehicle Routing
@@ -114,15 +125,15 @@ export default function App() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-3">
-                <Dashboard 
-                  data={dataSummary!} 
-                  results={optimizationResults || null} 
+                <Dashboard
+                  data={dataSummary!}
+                  results={optimizationResults || null}
                   scenarioResults={allScenarioResults}
                 />
               </div>
               <div className="lg:col-span-1">
-                <ScenarioPanel 
-                  data={dataSummary!} 
+                <ScenarioPanel
+                  data={dataSummary!}
                   onScenarioRun={handleScenarioRun}
                   loading={loading}
                   setLoading={setLoading}

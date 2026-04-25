@@ -1,5 +1,5 @@
 """
-Supply Chain Optimization API
+Intelligent Warehouse to Store Supply Chain Optimiser
 Author: Manoj
 License: MIT
 """

@@ -1,6 +1,6 @@
-# Intelligent Warehouse-to-Store Distribution Network Optimiser
+# Intelligent Warehouse to Store Supply Chain Optimiser
 
-A full-stack research platform for pharmaceutical supply chain logistics, combining Random Forest demand forecasting, Linear Programming allocation, and Capacitated Vehicle Routing.
+This project focuses on the optimization of a pharmaceutical supply chain network. It is a full-stack research platform combining Random Forest demand forecasting, Linear Programming allocation, and Capacitated Vehicle Routing.
 
 ## 🎯 Project Overview
 This system implements a three-stage intelligence pipeline to optimize distribution across regional clusters:
