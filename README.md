@@ -20,22 +20,7 @@ The project utilizes real pharmaceutical distribution data from 4 regional clust
 - **Feasibility Boundary**: Empirically derived at `α/γ ≤ 2.31`.
 - **Scale**: 1,379 customer nodes across 12 temporal periods.
 
-## ⚙️ Setup & Installation
 
-### 1. Frontend
-```bash
-npm install
-npm run dev
-```
-
-### 2. Backend
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate # Windows
-pip install -r ../requirements.txt
-python main.py
-```
 
 ## 📁 Project Structure
 - `src/`: React frontend components and logic.
