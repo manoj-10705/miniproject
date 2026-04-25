@@ -1,3 +1,18 @@
+/**
+ * Supply Chain Optimization Dashboard — Main Application Shell
+ * ─────────────────────────────────────────────────────────────
+ * @author   Manoj (manoj-10705)
+ * @email    ganymede323@gmail.com
+ * @github   https://github.com/manoj10705/miniproject
+ * @created  December 2025
+ * @license  MIT — Copyright (c) 2025-2026 Manoj
+ *
+ * React 19 + TypeScript + Vite frontend for the Intelligent
+ * Warehouse-to-Store Distribution Network Optimiser with
+ * Disruption Rerouting.
+ * ─────────────────────────────────────────────────────────────
+ */
+
 import React, { useState, useCallback, useEffect} from 'react';
 import { Toaster } from 'sonner';
 import FileUpload from './components/FileUpload';
@@ -80,7 +95,7 @@ export default function App() {
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold" style={{ color: '#2C3E50' }}>
-                Supply Chain Optimization Platform
+                Intelligent Warehouse to Store Distribution Network Optimiser with Disruption Rerouting
               </h1>
               <p className="text-base mt-1" style={{ color: '#2C3E50' }}>
                 Advanced Analytics for Warehouse Allocation & Vehicle Routing
