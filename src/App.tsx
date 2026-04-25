@@ -1,16 +1,7 @@
 /**
- * Supply Chain Optimization Dashboard — Main Application Shell
- * ─────────────────────────────────────────────────────────────
- * @author   Manoj (manoj-10705)
- * @email    ganymede323@gmail.com
- * @github   https://github.com/manoj10705/miniproject
- * @created  December 2025
- * @license  MIT — Copyright (c) 2025-2026 Manoj
- *
- * React 19 + TypeScript + Vite frontend for the Intelligent
- * Warehouse-to-Store Distribution Network Optimiser with
- * Disruption Rerouting.
- * ─────────────────────────────────────────────────────────────
+ * Supply Chain Optimization Dashboard
+ * Author: Manoj
+ * License: MIT
  */
 
 import React, { useState, useCallback, useEffect} from 'react';

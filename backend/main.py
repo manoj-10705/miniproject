@@ -1,19 +1,7 @@
 """
 Supply Chain Optimization API
-─────────────────────────────────────────────────────────────────
-Author  : Manoj (manoj-10705)
-Email   : ganymede323@gmail.com
-GitHub  : https://github.com/manoj10705/miniproject
-Created : December 2025
-License : MIT — Copyright (c) 2025-2026 Manoj
-
-Three-stage sequential intelligence pipeline:
-  Stage 1 → Random Forest Demand Forecasting
-  Stage 2 → Linear Programming Allocation (scipy.linprog)
-  Stage 3 → Capacitated VRP via OR-Tools (Guided Local Search)
-
-This module orchestrates the entire pipeline via FastAPI endpoints.
-─────────────────────────────────────────────────────────────────
+Author: Manoj
+License: MIT
 """
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
