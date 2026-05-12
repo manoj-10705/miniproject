@@ -27,8 +27,14 @@ class AllocationOptimizer:
             # Prepare data
             warehouse_df = pd.DataFrame(warehouses)
             store_df = pd.DataFrame(stores)
-            capacity_df = pd.DataFrame(capacity_data)
-            cost_df = pd.DataFrame(cost_data)
+            if isinstance(capacity_data, dict):
+                capacity_df = pd.DataFrame([capacity_data])
+            else:
+                capacity_df = pd.DataFrame(capacity_data)
+            if isinstance(cost_data, dict):
+                cost_df = pd.DataFrame([cost_data])
+            else:
+                cost_df = pd.DataFrame(cost_data)
             
             # Extract warehouse and store IDs
             warehouse_ids = self._extract_ids(warehouse_df, ['warehouse_id', 'id', 'location_id'])
